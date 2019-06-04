@@ -1,0 +1,42 @@
+version: '2'
+
+services:
+  web:
+    build:
+      context: .
+    ports:
+      - 8099:80
+    command: sh /init.sh
+    volumes:
+      - ./:/var/www/html
+      - ./docker/vhost.conf:/etc/apache2/sites-available/000-default.conf
+      - ./docker/init.sh:/init.sh
+      - ./docker/supervisor/queue.conf:/etc/supervisor/conf.d/queue.conf
+      - ./docker/logs/apache2:/var/log/apache2
+      - ./docker/logs/supervisor:/var/log/supervisor
+    depends_on:
+      - mysql
+      - redis
+
+  mysql:
+    image: mysql:5.7
+    ports:
+      - 11060:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: docker
+      MYSQL_USER: docker
+      MYSQL_PASSWORD: 123456
+
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
+
+  echo-server:
+    image: lagun4ik/laravel-echo-server
+    restart: always
+    ports:
+     - 6001:6001
+    volumes:
+     - ./:/app
